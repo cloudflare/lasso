@@ -1,3 +1,7 @@
+/**
+ * This Worker is responsible for caching dependency binaries for Wrangler.
+ */
+
 addEventListener('fetch', event => {
   event.respondWith(handleRequest(event.request))
 })
