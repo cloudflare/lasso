@@ -4,3 +4,7 @@ type = "js"
 route = "https://workers.cloudflare.com/get-npm-wrangler-binary*"
 workers_dev = false
 zone_id = "29ed9c83c2c78d6967876c4053ec8154"
+
+kv_namespaces = [
+  { binding = "LASSO_KV", id = "d601463c79864c0bbc54a76580e388c7" }
+]
