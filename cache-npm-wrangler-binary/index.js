@@ -1,9 +1,5 @@
-/**
- * This Worker is responsible for caching Wrangler binaries for installation by the npm installer.
- */
-
 addEventListener("fetch", (event) => {
-  event.respondWith(handleEvent(event));
+  event.respondWith(handleRequest(event.request));
 });
 
 async function getJSONFromGitHub(url) {
@@ -27,21 +23,13 @@ async function getReleaseByTag(tag) {
   );
 }
 
-async function cacheAsset(key, response) {
-  const { status, statusText, body } = response;
-  const headers = {};
-  for (const [header, value] of response.headers) {
-    headers[header] = value;
-  }
-
-  return await LASSO_KV.put(key, body, {
-    metadata: { status, statusText, headers },
-  });
-}
-
-async function handleEvent(event) {
+/**
+ * Fetch and log a request
+ * @param {Request} request
+ */
+async function handleRequest(request) {
   let urlParts = /^https?:\/\/workers\.cloudflare\.com\/get\-npm\-wrangler\-binary\/([^\/]+)\/([^\/]+)(?:\/|$)/.exec(
-    event.request.url
+    request.url
   );
   if (!urlParts) return new Response("Missing URL components", { status: 400 });
 
@@ -58,27 +46,10 @@ async function handleEvent(event) {
     asset.name.endsWith(arch + ".tar.gz")
   );
 
-  const assetURL = compatibleAsset.browser_download_url;
-
-  const { value: cachedAsset, metadata: init } = await LASSO_KV.getWithMetadata(
-    assetURL,
-    "steam"
-  );
-
-  if (!!cachedAsset) {
-    return new Response(cachedAsset, init);
-  }
-
-  const response = await fetch(assetURL, {
+  return fetch(compatibleAsset.browser_download_url, {
     cf: {
       cacheEverything: true,
       cacheTtl: 3600,
     },
   });
-
-  if (response.ok) {
-    event.waitUntil(cacheAsset(assetURL, response.clone()));
-  }
-
-  return response;
 }
