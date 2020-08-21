@@ -1,5 +1,5 @@
 addEventListener("fetch", (event) => {
-  event.respondWith(handleRequest(event.request));
+  event.respondWith(handleEvent(event));
 });
 
 async function getJSONFromGitHub(url) {
@@ -23,13 +23,21 @@ async function getReleaseByTag(tag) {
   );
 }
 
-/**
- * Fetch and log a request
- * @param {Request} request
- */
-async function handleRequest(request) {
+async function cacheAsset(key, response) {
+  const { status, statusText, body } = response;
+  const headers = {};
+  for (const [header, value] of response.headers) {
+    headers[header] = value;
+  }
+
+  return await LASSO_KV.put(key, body, {
+    metadata: { status, statusText, headers },
+  });
+}
+
+async function handleEvent(event) {
   let urlParts = /^https?:\/\/workers\.cloudflare\.com\/get\-npm\-wrangler\-binary\/([^\/]+)\/([^\/]+)(?:\/|$)/.exec(
-    request.url
+    event.request.url
   );
   if (!urlParts) return new Response("Missing URL components", { status: 400 });
 
@@ -46,10 +54,27 @@ async function handleRequest(request) {
     asset.name.endsWith(arch + ".tar.gz")
   );
 
-  return fetch(compatibleAsset.browser_download_url, {
+  const assetURL = compatibleAsset.browser_download_url;
+
+  const { value: cachedAsset, metadata: init } = await LASSO_KV.getWithMetadata(
+    assetURL,
+    "stream"
+  );
+
+  if (!!cachedAsset) {
+    return new Response(cachedAsset, init);
+  }
+
+  const response = await fetch(assetURL, {
     cf: {
       cacheEverything: true,
       cacheTtl: 3600,
     },
   });
+
+  if (response.ok) {
+    event.waitUntil(cacheAsset(assetURL, response.clone()));
+  }
+
+  return response;
 }
