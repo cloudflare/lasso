@@ -9,10 +9,15 @@ async function getJSONFromGitHub(url) {
     },
   })
     .then(async (res) => {
-      return res.json();
+      if (res.status != 200) {
+        console.error("Non-200 response from GitHub", url, res.status, res.json())
+        throw new Error("Non-200 response from GitHub")
+      } else {
+        return res.json();
+      }
     })
     .catch((err) => {
-      console.error("Error loading", url, err);
+      console.error("Error fetching from GitHub", url, err);
       throw err;
     });
 }
@@ -48,6 +53,12 @@ async function handleEvent(event) {
 
   let release = await getReleaseByTag(tag);
 
+  if (release.assets_url === undefined) {
+    console.error("Release does not contain an assets_url property", release)
+    throw new Error("Release does not contain an assets_url property")
+  }
+
+  // Do we even need to do this? It appears that `release` already contains an `assets` array.
   let assets = await getJSONFromGitHub(release.assets_url);
 
   const [compatibleAsset] = assets.filter((asset) =>
