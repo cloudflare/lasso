@@ -6,6 +6,13 @@ async function getJSONFromGitHub(url) {
   return fetch(url, {
     headers: {
       "User-Agent": "Workers",
+      "Authorization": `token ${GITHUB_TOKEN}`,
+    },
+    cf: {
+      cacheEverything: true,
+      cacheTtlByStatus: {
+        "200": 300,
+      }
     },
   })
     .then(async (res) => {
