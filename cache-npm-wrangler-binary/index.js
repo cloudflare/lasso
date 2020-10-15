@@ -10,7 +10,7 @@ async function getJSONFromGitHub(url) {
   })
     .then(async (res) => {
       if (res.status != 200) {
-        console.error("Non-200 response from GitHub", url, res.status, res.json())
+        console.error("Non-200 response from GitHub", url, res.status, await res.json())
         throw new Error("Non-200 response from GitHub")
       } else {
         return res.json();
