@@ -23,6 +23,18 @@ async function handleRequest(request) {
     version = version.substring(1)
   }
 
+  if (target === 'aarch64-apple-darwin') {
+    const asset = `${toolName}-${version}-${target}.tar.gz`
+    const body = await WRANGLER_AARCH64_DEPS.get(asset)
+    
+    return new Response(body, { headers: {
+      'content-length': body.length,
+      'content-type': 'application/octet-stream',
+      'accept-ranges': 'bytes',
+      'content-disposition': `attachment; filename=${asset}`
+    }})
+  }
+
   let ownersToToolNames = new Map()
   ownersToToolNames.set("ashleygwilliams", ["cargo-generate"])
   ownersToToolNames.set("rustwasm", ["wasm-pack"])
