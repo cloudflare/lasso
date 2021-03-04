@@ -13,7 +13,7 @@ addEventListener('fetch', event => {
 async function handleRequest(request) {
   let urlParts = /^https?:\/\/workers\.cloudflare\.com\/get\-binary\/([^\/]+)\/([^\/]+)\/([^\/]+)\/([^\/]+)\.tar\.gz/.exec(request.url)
   if (!urlParts) {
-    return new Response("Missing URL components", {status: 400})
+    return new Response("Missing URL components", { status: 400 })
   }
 
   let owner, toolName, version, target
@@ -23,17 +23,16 @@ async function handleRequest(request) {
     version = version.substring(1)
   }
 
+  const opts = {
+    cf: {
+      cacheEverything: true,
+      cacheTtl: 3600
+    }
+  }
+
+  // temporary fix until M1 / Apple Silicon builds are more widely available from source repos
   if (target === 'aarch64-apple-darwin') {
-    const asset = `${toolName}-v${version}-${target}.tar.gz`
-    const body = await WRANGLER_AARCH64_DEPS.get(asset)
-    
-    return new Response(body, { headers: {
-      'content-length': body.length,
-      'content-type': 'application/octet-stream',
-      'accept-ranges': 'bytes',
-      'content-disposition': `attachment; filename=${asset}`,
-      'content-encoding': 'gzip'
-    }})
+    return fetch(`https://github.com/cloudflare/wrangler/releases/download/v${version}/${toolName}-v${version}-${target}.tar.gz`, opts)
   }
 
   let ownersToToolNames = new Map()
@@ -41,15 +40,9 @@ async function handleRequest(request) {
   ownersToToolNames.set("rustwasm", ["wasm-pack"])
   ownersToToolNames.set("cloudflare", ["cloudflared"])
 
-  if (!ownersToToolNames.get(owner).includes(toolName)) { 
-    return new Response("Unauthorized tool", {status: 400})
+  if (!ownersToToolNames.get(owner).includes(toolName)) {
+    return new Response("Unauthorized tool", { status: 400 })
   }
 
-
-  return fetch(`https://github.com/${owner}/${toolName}/releases/download/v${version}/${toolName}-v${version}-${target}.tar.gz`, {
-    cf: {
-      cacheEverything: true,
-      cacheTtl: 3600
-    }
-  })
+  return fetch(`https://github.com/${owner}/${toolName}/releases/download/v${version}/${toolName}-v${version}-${target}.tar.gz`, opts)
 }
