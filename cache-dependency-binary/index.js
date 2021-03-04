@@ -19,20 +19,20 @@ async function handleRequest(request) {
   let owner, toolName, version, target
   [_, owner, toolName, version, target] = urlParts
 
+  if (version[0] == 'v') {
+    version = version.substring(1)
+  }
+
   if (target === 'aarch64-apple-darwin') {
-    const asset = `${toolName}-${version}-${target}.tar.gz`
+    const asset = `${toolName}-v${version}-${target}.tar.gz`
     const body = await WRANGLER_AARCH64_DEPS.get(asset)
     
     return new Response(body, { headers: {
       'content-length': body.length,
-      'content-type': 'application/gzip',
+      'content-type': 'application/octet-stream',
       'accept-ranges': 'bytes',
       'content-disposition': `attachment; filename=${asset}`
     }})
-  }
-
-  if (version[0] == 'v') {
-    version = version.substring(1)
   }
 
   let ownersToToolNames = new Map()
