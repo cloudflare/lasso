@@ -31,7 +31,8 @@ async function handleRequest(request) {
       'content-length': body.length,
       'content-type': 'application/octet-stream',
       'accept-ranges': 'bytes',
-      'content-disposition': `attachment; filename=${asset}`
+      'content-disposition': `attachment; filename=${asset}`,
+      'content-encoding': 'gzip'
     }})
   }
 
