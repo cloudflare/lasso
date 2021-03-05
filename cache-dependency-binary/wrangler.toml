@@ -4,6 +4,3 @@ type = "javascript"
 route = "https://workers.cloudflare.com/get-binary*"
 workers_dev = false
 zone_id = "29ed9c83c2c78d6967876c4053ec8154"
-kv_namespaces = [
-  { binding = "WRANGLER_AARCH64_DEPS", id = "aa7af0771c6e4b578f399dcf8436db75" }
-]
