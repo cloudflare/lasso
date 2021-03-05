@@ -2,7 +2,7 @@
  * This Worker is responsible for caching dependency binaries for Wrangler.
  */
 
-addEventListener('fetch', event => {
+ addEventListener('fetch', event => {
   event.respondWith(handleRequest(event.request))
 })
 
@@ -32,7 +32,9 @@ async function handleRequest(request) {
 
   // temporary fix until M1 / Apple Silicon builds are more widely available from source repos
   if (target === 'aarch64-apple-darwin') {
-    return fetch(`https://github.com/cloudflare/wrangler/releases/download/v${version}/${toolName}-v${version}-${target}.tar.gz`, opts)
+    // hard-code wrangler release, and update manually until we have automation for M1 (current: v1.14.1)
+    // return fetch(`https://github.com/cloudflare/wrangler/releases/download/v${version}/${toolName}-v${version}-${target}.tar.gz`, opts)
+    return fetch(`https://github.com/cloudflare/wrangler/releases/download/v1.14.1/${toolName}-v${version}-${target}.tar.gz`, opts)
   }
 
   let ownersToToolNames = new Map()
